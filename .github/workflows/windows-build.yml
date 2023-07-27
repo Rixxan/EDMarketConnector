@@ -114,7 +114,7 @@ jobs:
         run: |
           python build.py
 
-      - name: @nadeemjazmawe/inno-setup-action-CLI
+      - name: InnoSetup
         uses: nadeemjazmawe/inno-setup-action-cli@v6.0.5
         with:
             filepath: './EDMCTest.iss'

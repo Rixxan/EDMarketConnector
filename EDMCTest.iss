@@ -8,8 +8,6 @@
 #define SuppURL "https://github.com/EDCD/EDMarketConnector/"
 #define MyAppExeName "EDMarketConnector.exe"
 
-#define CurrDir function GetCurrentDir: String;
-
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
@@ -31,11 +29,11 @@ AllowNoIcons=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 OutputBaseFilename=EDMarketConnector_Installer_{#MyAppVersion}
-SetupIconFile={#CurrDir}\dist.win32\EDMarketConnector.ico
+SetupIconFile=dist.win32\EDMarketConnector.ico
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-InfoBeforeFile={#CurrDir}\dist.win32\Changelog.md
+InfoBeforeFile=dist.win32\Changelog.md
 
 
 [Languages]
@@ -45,8 +43,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "{#CurrDir}\dist.win32\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#CurrDir}\dist.win32\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist.win32\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist.win32\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -55,4 +53,3 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-

@@ -8,18 +8,15 @@ See LICENSE file.
 import os
 import re
 import shutil
-import subprocess
 import sys
 import pathlib
 import py2exe
-from os.path import exists, join, isdir
+from os.path import join, isdir
 from tempfile import gettempdir
-from lxml import etree
 from config import (
     appcmdname,
     appname,
     appversion,
-    appversion_nobuild,
     copyright,
     git_shorthash_from_head,
 )
@@ -201,120 +198,3 @@ if __name__ == "__main__":
         data_files=DATA_FILES,
         options=OPTIONS,
     )
-
-    ###########################################################################
-    # Build installer(s)
-    ###########################################################################
-    template_file = pathlib.Path("wix/template.wxs")
-    components_file = pathlib.Path("wix/components.wxs")
-    final_wxs_file = pathlib.Path("EDMarketConnector.wxs")
-
-    # Use heat.exe to generate the Component for all files inside dist.win32
-    heat_command = [
-        str(join(WIXPATH, "heat.exe")),
-        "dir",
-        str(DIST_DIR),
-        "-ag",
-        "-sfrag",
-        "-srid",
-        "-suid",
-        "-out",
-        str(components_file),
-    ]
-    subprocess.run(heat_command, check=True)
-
-    component_tree = etree.parse(str(components_file))
-    # Modify component_tree as described in the original code...
-
-    directory_win32 = component_tree.find(
-        './/{*}Directory[@Id="dist.win32"][@Name="dist.win32"]'
-    )
-    if directory_win32 is None:
-        raise ValueError(f'{components_file}: Expected Directory with Id="dist.win32"')
-
-    directory_win32.set("Id", "INSTALLDIR")
-    directory_win32.set("Name", "$(var.PRODUCTNAME)")
-
-    main_executable = directory_win32.find(
-        './/{*}Component[@Id="EDMarketConnector.exe"]'
-    )
-    if main_executable is None:
-        raise ValueError(
-            f'{components_file}: Expected Component with Id="EDMarketConnector.exe"'
-        )
-
-    main_executable.set("Id", "MainExecutable")
-    main_executable.set("Guid", "{D33BB66E-9664-4AB6-A044-3004B50A09B0}")
-    shortcut = etree.SubElement(
-        main_executable,
-        "Shortcut",
-        nsmap=main_executable.nsmap,
-        attrib={
-            "Id": "MainExeShortcut",
-            "Directory": "ProgramMenuFolder",
-            "Name": "$(var.PRODUCTLONGNAME)",
-            "Description": "Downloads station data from Elite: Dangerous",
-            "WorkingDirectory": "INSTALLDIR",
-            "Icon": "EDMarketConnector.exe",
-            "IconIndex": "0",
-            "Advertise": "yes",
-        },
-    )
-    # Now insert the appropriate parts as a child of the ProgramFilesFolder part
-    # of the template.
-    template_tree = etree.parse(str(template_file))
-    program_files_folder = template_tree.find(
-        './/{*}Directory[@Id="ProgramFilesFolder"]'
-    )
-    if program_files_folder is None:
-        raise ValueError(
-            f'{template_file}: Expected Directory with Id="ProgramFilesFolder"'
-        )
-
-    program_files_folder.insert(0, directory_win32)
-    # Append the Feature/ComponentRef listing to match
-    feature = template_tree.find('.//{*}Feature[@Id="Complete"][@Level="1"]')
-    if feature is None:
-        raise ValueError(
-            f'{template_file}: Expected Feature element with Id="Complete" Level="1"'
-        )
-    # This isn't part of the components
-    feature.append(
-        etree.Element(
-            "ComponentRef",
-            attrib={"Id": "RegistryEntries"},
-            nsmap=directory_win32.nsmap,
-        )
-    )
-    for c in directory_win32.findall(".//{*}Component"):
-        feature.append(
-            etree.Element(
-                "ComponentRef", attrib={"Id": c.get("Id")}, nsmap=directory_win32.nsmap
-            )
-        )
-
-    # Insert what we now have into the template and write it out
-    template_tree.write(
-        str(final_wxs_file), encoding="utf-8", pretty_print=True, xml_declaration=True
-    )
-
-    candle_command = rf'"{WIXPATH}\candle.exe" {appname}.wxs'
-    subprocess.run(candle_command, shell=True, check=True)
-
-    if not exists(f"{appname}.wixobj"):
-        raise AssertionError(f"No {appname}.wixobj: candle.exe failed?")
-
-    package_filename = f"{appname}_win_{appversion_nobuild()}.msi"
-    light_command = (
-        rf'"{WIXPATH}\light.exe" -b {DIST_DIR}\ -sacl -spdb '
-        rf"-sw1076 {appname}.wixobj -out {package_filename}"
-    )
-    subprocess.run(light_command, shell=True, check=True)
-
-    if not exists(package_filename):
-        raise AssertionError(f"light.exe failed, no {package_filename}")
-
-    # Seriously, this is how you make Windows Installer use the user's display language for its dialogs. What a crock.
-    # http://www.geektieguy.com/2010/03/13/create-a-multi-lingual-multi-language-msi-using-wix-and-custom-build-scripts
-    windows_installer_display_lang(appname, package_filename)
-    ###########################################################################

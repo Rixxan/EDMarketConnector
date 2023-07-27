@@ -37,6 +37,8 @@ def run_inno_setup_installer(iss_file_path: str) -> None:
 
 
 if __name__ == "__main__":
+    # Build the Program
+    exec(open('build.py').read())
     # Replace 'your_iss_file.iss' with the path to your actual .iss file
     iss_file_path: str = "./EDMC_Installer_Config.iss"
     run_inno_setup_installer(iss_file_path)

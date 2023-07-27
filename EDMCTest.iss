@@ -34,6 +34,7 @@ Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
 InfoBeforeFile=dist.win32\Changelog.md
+OutputDir=.
 
 
 [Languages]

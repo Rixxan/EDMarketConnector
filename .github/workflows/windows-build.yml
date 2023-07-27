@@ -124,7 +124,7 @@ jobs:
         with:
           name: Built files
           path: |
-              Output/EDMarketConnector_win_*.exe
+              EDMarketConnector_Installer_*.exe
               EDMarketConnector-release-*.zip
 
   release:
@@ -141,7 +141,7 @@ jobs:
           path: ./
           
       - name: Hash files
-        run: sha256sum Output/EDMarketConnector_Installer_*.exe EDMarketConnector-release-*.{zip,tar.gz} > ./hashes.sum
+        run: sha256sum EDMarketConnector_Installer_*.exe EDMarketConnector-release-*.{zip,tar.gz} > ./hashes.sum
 
       - name: Create Draft Release
         uses: "softprops/action-gh-release@v1"
@@ -151,7 +151,7 @@ jobs:
           prerelease: true
           discussion_category_name: "Announcement"
           files: |
-            ./Output/EDMarketConnector_Installer_*.exe
+            ./EDMarketConnector_Installer_*.exe
             ./EDMarketConnector-release-*.zip
             ./EDMarketConnector-release-*.tar.gz
             ./hashes.sum
